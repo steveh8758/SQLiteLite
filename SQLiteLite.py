@@ -47,7 +47,7 @@ class SQLITE:
             rt = cursor.fetchall()
         return rt
 
-    def creat_table(self, table_name:str, table_columns: dict[str, str]) -> None:
+    def create_table(self, table_name:str, table_columns: dict[str, str]) -> None:
         exe_str = f"CREATE TABLE IF NOT EXISTS {table_name} ("
         for k,v in table_columns.items():
             exe_str +=  f"\n\t{k} {v},"
@@ -58,7 +58,7 @@ class SQLITE:
     def get_tables(self) -> list:
         exe_str = "SELECT name FROM sqlite_master WHERE type='table' AND name != 'sqlite_sequence'"
         exe_res = self.execute(exe_str)
-        return exe_res[0] if exe_res != [] else []
+        return [row[0] for row in exe_res] if exe_res != [] else []
 
     def get_columns(self, table_name: str) -> list:
         exe_str = f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{table_name}'"
@@ -83,7 +83,7 @@ class SQLITE:
         #     return True
         return column_name in self.get_columns(table_name)
 
-    def creat_index(self, table_name: str, column_name: str) -> None:
+    def create_index(self, table_name: str, column_name: str) -> None:
         if not self.is_exist_table_name(table_name):
             raise KeyError(f"Can't find `{table_name}` in database.")
         if not self.is_exist_column_name(table_name, column_name):
@@ -136,32 +136,18 @@ class SQLITE:
         exe_str = f"PRAGMA table_info('{table_name}')"
         return self.execute(exe_str)
 
-    def get_total_data_count(self, table_name: str) -> int:
-        if not self.is_exist_table_name(table_name):
-            raise KeyError(f"Can't find `{table_name}` in database.")
-        exe_str = f"SELECT COUNT(*) FROM {table_name}"
-        result = self.execute(exe_str)
-        return int(result[0][0]) if result else 0
-
-    def get_columns_info(self, table_name: str) -> list[tuple]:
-        if not self.is_exist_table_name(table_name):
-            raise KeyError(f"Can't find `{table_name}` in database.")
-        exe_str = f"PRAGMA table_info('{table_name}')"
-        return self.execute(exe_str)
-
-
 if __name__ == '__main__':
     # 初始化資料庫
     s = SQLITE("Game.db")
     # 創建資料表
-    s.creat_table("RPG", {"job": "INT", "Name": "TEXT", "items": "TEXT"})
+    s.create_table("RPG", {"job": "INT", "Name": "TEXT", "items": "TEXT"})
     # 插入資料
     s.insert_data("RPG", {"job": 111, "Name": "Alice", "items": "Potion, Arrow"})
     s.insert_data("RPG", {"job": 999, "Name": "Bob", "items": "Bread, Potion"})
     s.insert_data("RPG", {"job": 999, "Name": "Clair", "items": "Candy, MageBook"})
     s.insert_data("RPG", {"job": 000, "Name": "David", "items": "Potion"})
     # 建立索引
-    s.creat_index("RPG", "job")
+    s.create_index("RPG", "job")
     # 獲取資料表列表
     print(f"tables: {s.get_tables()}\n")
     # 獲取 RPG 資料表的欄位列表
